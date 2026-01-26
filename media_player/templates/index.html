@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Media Player</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2b2bee",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101022",
+                    },
+                    fontFamily: {
+                        "display": ["Spline Sans", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #101022;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #232348;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2b2bee;
+        }
+
+        #media-element {
+            display: none;
+        }
+
+        #media-element.video-visible {
+            display: block;
+            position: fixed;
+            bottom: 7rem;
+            right: 1.5rem;
+            width: 320px;
+            aspect-ratio: 16/9;
+            z-index: 50;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            background: #000;
+        }
+
+        @media (max-width: 640px) {
+            #media-element.video-visible {
+                width: calc(100% - 3rem);
+                right: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white antialiased">
+
+    <!-- Hidden Media Element -->
+    <video id="media-element" controls></video>
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Mobile Sidebar Overlay -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-20 hidden md:hidden" onclick="toggleSidebar()">
+        </div>
+
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar"
+            class="w-64 flex flex-col bg-background-light dark:bg-background-dark border-r border-slate-200 dark:border-[#232348] h-full shrink-0 fixed md:relative z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+            <div class="p-6 flex flex-col h-full">
+                <!-- Logo/Brand -->
+                <div class="flex items-center gap-3 mb-10">
+                    <div class="bg-primary p-2 rounded-lg flex items-center justify-center">
+                        <span class="material-symbols-outlined text-white text-2xl">play_circle</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <h1 class="text-lg font-bold leading-none">Media Player</h1>
+                        <p class="text-[#9292c9] text-xs">Offline Dashboard</p>
+                    </div>
+                    <button class="md:hidden ml-auto text-slate-500" onclick="toggleSidebar()">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <!-- Nav Links -->
+                <nav class="flex flex-col gap-2 flex-grow">
+                    <a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary text-white shadow-lg shadow-primary/20 transition-all cursor-pointer"
+                        onclick="showLibrary('all')">
+                        <span class="material-symbols-outlined fill">home</span>
+                        <span class="text-sm font-semibold">Home</span>
+                    </a>
+
+                    <div class="mt-4 pt-4 border-t border-slate-200 dark:border-[#232348]">
+                        <div class="flex items-center justify-between px-4 mb-2">
+                            <p class="text-[10px] uppercase tracking-widest text-[#9292c9] font-bold">Playlists</p>
+                            <button onclick="openCreatePlaylistModal()" class="text-primary hover:text-blue-400">
+                                <span class="material-symbols-outlined text-sm">add</span>
+                            </button>
+                        </div>
+                        <div id="playlist-nav" class="flex flex-col gap-1 max-h-60 overflow-y-auto">
+                            <!-- Playlists injected here -->
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col overflow-hidden relative">
+            <!-- Top Navigation Bar -->
+            <header
+                class="flex flex-col md:flex-row items-center justify-between px-4 md:px-8 py-4 border-b border-slate-200 dark:border-[#232348] sticky top-0 bg-background-light dark:bg-background-dark z-10 backdrop-blur-md bg-opacity-80 gap-4">
+
+                <div class="w-full md:hidden flex items-center mb-2">
+                    <button onclick="toggleSidebar()" class="text-slate-600 dark:text-white mr-4">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
+                    <span class="font-bold text-lg">Media Player</span>
+                </div>
+
+                <div class="flex-1 w-full max-w-2xl">
+                    <div class="relative group flex flex-col sm:flex-row gap-2">
+                        <div class="flex-1 relative">
+                            <div
+                                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-[#9292c9]">
+                                <span class="material-symbols-outlined text-[20px]">link</span>
+                            </div>
+                            <input id="url-input"
+                                class="block w-full bg-slate-100 dark:bg-[#232348] border-none rounded-xl py-2 pl-10 pr-3 text-sm placeholder-slate-400 dark:placeholder-[#9292c9] focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-[#2a2a5a] transition-all text-slate-900 dark:text-white"
+                                placeholder="Paste YouTube URL here..." type="text" />
+                        </div>
+
+                        <div class="flex bg-slate-100 dark:bg-[#232348] rounded-xl p-1 shrink-0">
+                            <button onclick="setDownloadType('video')" id="btn-video"
+                                class="flex-1 px-4 py-1.5 rounded-lg text-sm font-medium transition-all bg-white dark:bg-[#2a2a5a] text-primary shadow-sm">
+                                Video
+                            </button>
+                            <button onclick="setDownloadType('audio')" id="btn-audio"
+                                class="flex-1 px-4 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-500 dark:text-[#9292c9] hover:bg-white/50">
+                                Audio
+                            </button>
+                        </div>
+
+                        <button onclick="startDownload()"
+                            class="bg-primary hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined">download</span>
+                            <span class="hidden sm:inline">Download</span>
+                        </button>
+                    </div>
+                    <div id="download-status-container" class="mt-2 hidden">
+                        <div class="flex justify-between text-xs text-slate-500 dark:text-[#9292c9] mb-1">
+                            <span id="status-text">Downloading...</span>
+                            <span id="status-percent">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 dark:bg-[#232348] rounded-full h-1.5">
+                            <div id="progress-bar" class="bg-primary h-1.5 rounded-full transition-all duration-300"
+                                style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto pb-32">
+                <!-- Library Section -->
+                <section class="py-6 px-4 md:px-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 id="library-title" class="text-2xl font-bold tracking-tight">Your Library</h2>
+                        <div class="flex gap-2 items-center">
+                            <button onclick="fetchFiles()"
+                                class="p-2 rounded-lg bg-slate-100 dark:bg-[#232348] text-slate-600 dark:text-[#9292c9] hover:text-primary transition-all"
+                                title="Refresh">
+                                <span class="material-symbols-outlined text-[20px]">refresh</span>
+                            </button>
+                            <button id="delete-playlist-btn" onclick="deleteCurrentPlaylistModal()"
+                                class="p-2 rounded-lg bg-slate-100 dark:bg-[#232348] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all hidden"
+                                title="Delete Playlist">
+                                <span class="material-symbols-outlined text-[20px]">delete_forever</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="files-grid"
+                        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+                        <!-- Files will be injected here -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- Persistent Playback Bar -->
+            <footer
+                class="absolute bottom-0 left-0 right-0 h-auto md:h-24 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-xl border-t border-slate-200 dark:border-[#232348] flex flex-col md:flex-row items-center px-4 md:px-6 py-2 md:py-0 gap-4 md:gap-8 z-20 transition-all">
+                <!-- Current Media Info -->
+                <div class="flex items-center gap-4 w-full md:w-1/4 min-w-48 justify-start">
+                    <div
+                        class="w-12 h-12 md:w-14 md:h-14 rounded-lg bg-slate-200 dark:bg-[#232348] flex items-center justify-center text-primary shrink-0">
+                        <span class="material-symbols-outlined text-3xl">music_note</span>
+                    </div>
+                    <div class="flex flex-col overflow-hidden text-left">
+                        <p id="player-title" class="text-sm font-bold truncate">No media</p>
+                        <p id="player-artist" class="text-xs text-slate-500 dark:text-[#9292c9] truncate">Select a file
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Player Controls -->
+                <div class="flex flex-col flex-1 w-full max-w-2xl gap-2 items-center">
+                    <div class="flex items-center justify-center gap-6">
+                        <button id="shuffle-btn"
+                            class="text-slate-500 dark:text-[#9292c9] hover:text-primary transition-colors"
+                            onclick="toggleShuffle()" title="Shuffle">
+                            <span class="material-symbols-outlined">shuffle</span>
+                        </button>
+                        <button class="text-slate-900 dark:text-white hover:text-primary transition-colors"
+                            onclick="playPrev()">
+                            <span class="material-symbols-outlined text-3xl">skip_previous</span>
+                        </button>
+                        <button id="play-pause-btn"
+                            class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 hover:scale-105 active:scale-95 transition-all"
+                            onclick="togglePlay()">
+                            <span id="play-icon"
+                                class="material-symbols-outlined text-2xl md:text-3xl fill">play_arrow</span>
+                        </button>
+                        <button class="text-slate-900 dark:text-white hover:text-primary transition-colors"
+                            onclick="playNext()">
+                            <span class="material-symbols-outlined text-3xl">skip_next</span>
+                        </button>
+                        <button id="repeat-btn"
+                            class="text-slate-500 dark:text-[#9292c9] hover:text-primary transition-colors"
+                            onclick="toggleRepeat()" title="Repeat">
+                            <span class="material-symbols-outlined">repeat</span>
+                        </button>
+                    </div>
+                    <!-- Seek bar -->
+                    <div class="flex items-center gap-3 w-full">
+                        <span id="current-time"
+                            class="text-[10px] text-slate-500 font-medium w-8 text-right">0:00</span>
+                        <div class="relative flex-1 h-1.5 bg-slate-200 dark:bg-[#232348] rounded-full overflow-hidden group cursor-pointer"
+                            onclick="seekTo(event)">
+                            <div id="seek-fill" class="h-full bg-primary relative w-0"></div>
+                        </div>
+                        <span id="total-time" class="text-[10px] text-slate-500 font-medium w-8">0:00</span>
+                    </div>
+                </div>
+
+                <!-- Volume -->
+                <div class="hidden md:flex items-center justify-end gap-4 w-1/4">
+                    <div class="flex items-center gap-2 w-32">
+                        <span
+                            class="material-symbols-outlined text-slate-500 dark:text-[#9292c9] text-[20px]">volume_up</span>
+                        <input type="range" min="0" max="1" step="0.05" oninput="setVolume(this.value)"
+                            class="w-full accent-primary h-1 bg-slate-200 dark:bg-[#232348] rounded-full appearance-none cursor-pointer">
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Create Playlist Modal -->
+    <div id="create-playlist-modal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden backdrop-blur-sm">
+        <div
+            class="bg-background-light dark:bg-background-dark p-6 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-200 dark:border-[#232348] transform transition-all scale-100">
+            <h3 class="text-xl font-bold mb-1 text-slate-900 dark:text-white">New Playlist</h3>
+            <p class="text-sm text-slate-500 dark:text-[#9292c9] mb-4">Enter a name for your new collection.</p>
+
+            <input id="new-playlist-name" type="text" placeholder="My Awesome Playlist"
+                class="w-full bg-slate-100 dark:bg-[#232348] border-none rounded-xl py-3 px-4 mb-4 text-sm focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-[#2a2a5a] text-slate-900 dark:text-white transition-all">
+
+            <div class="flex gap-3">
+                <button onclick="closeCreatePlaylistModal()"
+                    class="flex-1 py-2 rounded-xl bg-slate-200 dark:bg-[#232348] text-slate-600 dark:text-[#9292c9] text-sm font-bold hover:bg-slate-300 dark:hover:bg-[#34345a] transition-all">Cancel</button>
+                <button onclick="confirmCreatePlaylist()"
+                    class="flex-1 py-2 rounded-xl bg-primary text-white text-sm font-bold hover:bg-blue-600 transition-all shadow-lg shadow-primary/20">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-confirm-modal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden backdrop-blur-sm">
+        <div
+            class="bg-background-light dark:bg-background-dark p-6 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-200 dark:border-[#232348]">
+            <div class="flex flex-col items-center text-center mb-4">
+                <div
+                    class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 text-red-500 flex items-center justify-center mb-3">
+                    <span class="material-symbols-outlined text-2xl">warning</span>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white">Delete Playlist?</h3>
+                <p id="delete-modal-text" class="text-sm text-slate-500 dark:text-[#9292c9] mt-2">Are you sure you want
+                    to delete this playlist? This action cannot be undone.</p>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closeDeleteConfirmModal()"
+                    class="flex-1 py-2 rounded-xl bg-slate-200 dark:bg-[#232348] text-slate-600 dark:text-[#9292c9] text-sm font-bold hover:bg-slate-300 dark:hover:bg-[#34345a] transition-all">Cancel</button>
+                <button onclick="confirmDeletePlaylist()"
+                    class="flex-1 py-2 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600 transition-all shadow-lg shadow-red-500/20">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add to Playlist Modal -->
+    <div id="playlist-modal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden backdrop-blur-sm">
+        <div
+            class="bg-background-light dark:bg-background-dark p-6 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-200 dark:border-[#232348]">
+            <h3 class="text-lg font-bold mb-4 md:text-xl">Add to Playlist</h3>
+            <div id="modal-playlist-list" class="flex flex-col gap-2 mb-4 max-h-48 overflow-y-auto pr-1">
+                <!-- Options -->
+            </div>
+            <button onclick="closeModal()"
+                class="w-full py-2 rounded-xl bg-slate-200 dark:bg-[#232348] text-slate-600 dark:text-[#9292c9] text-sm font-bold hover:bg-slate-300 dark:hover:bg-[#34345a] transition-all">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        const mediaElement = document.getElementById('media-element');
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const playIcon = document.getElementById('play-icon');
+        const progressBar = document.getElementById('progress-bar');
+        const downloadStatusContainer = document.getElementById('download-status-container');
+        const statusText = document.getElementById('status-text');
+        const statusPercent = document.getElementById('status-percent');
+
+        // State
+        let currentDownloadType = 'video';
+        let allFiles = [];
+        let currentPlaylistFiles = []; // Files in current view
+        let playlists = {};
+        let currentView = 'all'; // 'all' or playlist name
+        let fileContextFn = null; // file to be added
+
+        // Player State
+        let isShuffle = false;
+        let isRepeat = false;
+        let currentFileIndex = -1;
+
+        // Initial Load
+        fetchFiles();
+        fetchPlaylists();
+
+        // Setup Media End Event for Auto-Play
+        mediaElement.addEventListener('ended', () => {
+            if (isRepeat) {
+                mediaElement.currentTime = 0;
+                mediaElement.play();
+            } else {
+                playNext(true); // Auto next
+            }
+        });
+
+        // UI Helpers
+        function toggleSidebar() {
+            const sb = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (sb.classList.contains('-translate-x-full')) {
+                sb.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sb.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function setDownloadType(type) {
+            currentDownloadType = type;
+            const btnVideo = document.getElementById('btn-video');
+            const btnAudio = document.getElementById('btn-audio');
+
+            const activeClass = "bg-white dark:bg-[#2a2a5a] text-primary shadow-sm";
+            const inactiveClass = "text-slate-500 dark:text-[#9292c9] hover:bg-white/50";
+
+            if (type === 'video') {
+                btnVideo.className = `flex-1 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeClass}`;
+                btnAudio.className = `flex-1 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${inactiveClass}`;
+            } else {
+                btnVideo.className = `flex-1 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${inactiveClass}`;
+                btnAudio.className = `flex-1 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeClass}`;
+            }
+        }
+
+        // Modal Logic
+        function openCreatePlaylistModal() {
+            document.getElementById('new-playlist-name').value = '';
+            document.getElementById('create-playlist-modal').classList.remove('hidden');
+            document.getElementById('new-playlist-name').focus();
+        }
+
+        function closeCreatePlaylistModal() {
+            document.getElementById('create-playlist-modal').classList.add('hidden');
+        }
+
+        async function confirmCreatePlaylist() {
+            const nameInput = document.getElementById('new-playlist-name');
+            const name = nameInput.value.trim();
+            if (!name) return;
+
+            try {
+                const res = await fetch('/playlists', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+
+                if (res.ok) {
+                    closeCreatePlaylistModal();
+                    fetchPlaylists();
+                } else {
+                    const data = await res.json();
+                    alert(data.error);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function deleteCurrentPlaylistModal() {
+            if (currentView === 'all') return;
+            document.getElementById('delete-modal-text').innerText = `Are you sure you want to delete "${currentView}"? This action cannot be undone.`;
+            document.getElementById('delete-confirm-modal').classList.remove('hidden');
+        }
+
+        function closeDeleteConfirmModal() {
+            document.getElementById('delete-confirm-modal').classList.add('hidden');
+        }
+
+        async function confirmDeletePlaylist() {
+            await fetch(`/playlists/${currentView}`, { method: 'DELETE' });
+            closeDeleteConfirmModal();
+            showLibrary('all');
+            fetchPlaylists();
+        }
+
+        // Download & Check Status
+        async function startDownload() {
+            const url = document.getElementById('url-input').value;
+            if (!url) return alert("Please enter a URL");
+
+            downloadStatusContainer.classList.remove('hidden');
+            statusText.innerText = "Initializing...";
+
+            try {
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, type: currentDownloadType })
+                });
+
+                if (response.ok) {
+                    trackProgress();
+                    document.getElementById('url-input').value = ''; // Clear Input
+                } else {
+                    const data = await response.json();
+                    alert(data.error || "Error starting download");
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function trackProgress() {
+            const interval = setInterval(async () => {
+                const res = await fetch('/status');
+                const data = await res.json();
+
+                statusText.innerText = `${data.status.toUpperCase()} ${data.filename || ''}`;
+                statusPercent.innerText = data.percentage;
+                progressBar.style.width = data.percentage.replace('%', '') + '%';
+
+                if (data.status === 'completed' || data.status === 'error') {
+                    clearInterval(interval);
+                    fetchFiles();
+                    setTimeout(() => downloadStatusContainer.classList.add('hidden'), 5000);
+                }
+            }, 1000);
+        }
+
+        // Library & Data
+        async function fetchFiles() {
+            const res = await fetch('/files');
+            allFiles = await res.json();
+            renderFiles();
+        }
+
+        async function fetchPlaylists() {
+            const res = await fetch('/playlists');
+            playlists = await res.json();
+            renderPlaylistNav();
+        }
+
+        function renderPlaylistNav() {
+            const nav = document.getElementById('playlist-nav');
+            nav.innerHTML = '';
+            for (const [name, files] of Object.entries(playlists)) {
+                const a = document.createElement('div');
+                a.className = 'group flex items-center justify-between px-4 py-2 rounded-xl text-slate-600 dark:text-[#9292c9] hover:bg-slate-100 dark:hover:bg-[#232348] transition-all cursor-pointer';
+                a.innerHTML = `
+                    <div class="flex items-center gap-3 flex-1 overflow-hidden" onclick="showLibrary('${name}')">
+                        <span class="material-symbols-outlined text-sm">queue_music</span> 
+                        <span class="text-sm font-medium truncate">${name}</span>
+                    </div>
+                `;
+                nav.appendChild(a);
+            }
+        }
+
+        function showLibrary(view) {
+            currentView = view;
+            const title = document.getElementById('library-title');
+            const delBtn = document.getElementById('delete-playlist-btn');
+
+            if (view === 'all') {
+                title.innerText = "Your Library";
+                delBtn.classList.add('hidden');
+            } else {
+                title.innerText = view;
+                delBtn.classList.remove('hidden');
+            }
+            if (window.innerWidth < 768) toggleSidebar();
+
+            renderFiles();
+        }
+
+        function renderFiles() {
+            const grid = document.getElementById('files-grid');
+            grid.innerHTML = '';
+
+            let displayFiles = allFiles;
+            if (currentView !== 'all') {
+                const plFiles = playlists[currentView] || [];
+                displayFiles = allFiles.filter(f => plFiles.includes(f.filename));
+            }
+
+            // Sync Current Playlist for Player Navigation
+            currentPlaylistFiles = displayFiles;
+
+            if (displayFiles.length === 0) {
+                grid.innerHTML = `<p class="text-slate-500 col-span-full text-center py-10">No items found.</p>`;
+                return;
+            }
+
+            displayFiles.forEach((file, index) => {
+                const el = document.createElement('div');
+                el.className = 'group relative';
+
+                const icon = file.type === 'video' ? 'movie' : 'music_note';
+                const color = file.type === 'video' ? 'bg-purple-500' : 'bg-blue-500';
+
+                el.innerHTML = `
+                    <div class="relative cursor-pointer mb-3 overflow-hidden rounded-xl aspect-square shadow-xl transition-transform duration-300 group-hover:-translate-y-1 ${color} flex items-center justify-center" onclick="playFileAtIndex(${index})">
+                        <span class="material-symbols-outlined text-white text-6xl">${icon}</span>
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <div class="bg-primary w-12 h-12 rounded-full flex items-center justify-center shadow-lg shadow-primary/40">
+                                <span class="material-symbols-outlined text-white text-2xl fill">play_arrow</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-start gap-2">
+                         <div class="flex-1 min-w-0">
+                            <h3 class="font-bold text-sm truncate px-1 cursor-pointer" onclick="playFileAtIndex(${index})">${file.filename}</h3>
+                            <p class="text-xs text-slate-500 dark:text-[#9292c9] px-1 capitalize">${file.type}</p>
+                         </div>
+                         <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                             <button onclick="openPlaylistModal('${file.filename}')" class="text-slate-400 hover:text-primary" title="Add to Playlist"><span class="material-symbols-outlined text-[18px]">playlist_add</span></button>
+                             <button onclick="deleteFile('${file.filename}')" class="text-slate-400 hover:text-red-500" title="Delete File"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+                         </div>
+                    </div>
+                `;
+                grid.appendChild(el);
+            });
+        }
+
+        async function deleteFile(filename) {
+            if (!confirm(`Delete ${filename}?`)) return;
+            await fetch('/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename })
+            });
+            fetchFiles();
+        }
+
+        // Add to Playlist Modal
+        function openPlaylistModal(filename) {
+            const modal = document.getElementById('playlist-modal');
+            const list = document.getElementById('modal-playlist-list');
+            fileContextFn = filename;
+
+            list.innerHTML = '';
+            if (Object.keys(playlists).length === 0) {
+                list.innerHTML = '<p class="text-sm text-slate-500 text-center py-4">No playlists available.</p>';
+            }
+
+            for (const name of Object.keys(playlists)) {
+                const btn = document.createElement('button');
+                btn.className = 'w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2a2a5a] text-sm text-slate-700 dark:text-slate-300 transition-colors';
+                btn.innerHTML = `<span class="material-symbols-outlined text-lg">queue_music</span> ${name}`;
+                btn.onclick = async () => {
+                    await fetch(`/playlists/${name}/add`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename })
+                    });
+                    closeModal();
+                    fetchPlaylists();
+                };
+                list.appendChild(btn);
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('playlist-modal').classList.add('hidden');
+        }
+
+        // Enhanced Player Logic
+        function playFileAtIndex(index) {
+            if (index < 0 || index >= currentPlaylistFiles.length) return;
+
+            currentFileIndex = index;
+            const file = currentPlaylistFiles[index];
+
+            mediaElement.src = file.path;
+            mediaElement.play();
+
+            document.getElementById('player-title').innerText = file.filename;
+            document.getElementById('player-artist').innerText = currentView === 'all' ? 'All Library' : currentView;
+
+            updatePlayIcon(true);
+
+            if (file.type === 'video') {
+                mediaElement.classList.add('video-visible');
+            } else {
+                mediaElement.classList.remove('video-visible');
+            }
+        }
+
+        function toggleShuffle() {
+            isShuffle = !isShuffle;
+            const btn = document.getElementById('shuffle-btn');
+            if (isShuffle) btn.classList.add('text-primary');
+            else btn.classList.remove('text-primary');
+        }
+
+        function toggleRepeat() {
+            isRepeat = !isRepeat;
+            const btn = document.getElementById('repeat-btn');
+            if (isRepeat) {
+                btn.classList.add('text-primary');
+                btn.innerHTML = '<span class="material-symbols-outlined fill">repeat_one</span>';
+            } else {
+                btn.classList.remove('text-primary');
+                btn.innerHTML = '<span class="material-symbols-outlined">repeat</span>';
+            }
+        }
+
+        function playNext(auto = false) {
+            if (currentFileIndex === -1 && currentPlaylistFiles.length > 0) {
+                playFileAtIndex(0);
+                return;
+            }
+
+            if (isShuffle) {
+                const randIndex = Math.floor(Math.random() * currentPlaylistFiles.length);
+                playFileAtIndex(randIndex);
+            } else {
+                if (currentFileIndex + 1 < currentPlaylistFiles.length) {
+                    playFileAtIndex(currentFileIndex + 1);
+                } else {
+                    // End of list
+                    if (auto) {
+                        // Stop or Loop, for now stop unless repeat all implemented, current repeat is repeat-one
+                        updatePlayIcon(false);
+                    } else {
+                        playFileAtIndex(0); // Cycle to start manually
+                    }
+                }
+            }
+        }
+
+        function playPrev() {
+            if (currentFileIndex === -1) return;
+            if (mediaElement.currentTime > 3) {
+                mediaElement.currentTime = 0;
+                return;
+            }
+
+            if (currentFileIndex - 1 >= 0) {
+                playFileAtIndex(currentFileIndex - 1);
+            } else {
+                playFileAtIndex(currentPlaylistFiles.length - 1);
+            }
+        }
+
+        function togglePlay() {
+            if (mediaElement.paused) {
+                if (currentFileIndex === -1 && currentPlaylistFiles.length > 0) {
+                    playFileAtIndex(0);
+                } else {
+                    mediaElement.play();
+                }
+                updatePlayIcon(true);
+            } else {
+                mediaElement.pause();
+                updatePlayIcon(false);
+            }
+        }
+
+        function updatePlayIcon(isPlaying) {
+            playIcon.innerText = isPlaying ? 'pause' : 'play_arrow';
+        }
+
+        mediaElement.addEventListener('timeupdate', () => {
+            const current = mediaElement.currentTime;
+            const duration = mediaElement.duration || 0;
+
+            document.getElementById('current-time').innerText = formatTime(current);
+            document.getElementById('total-time').innerText = formatTime(duration);
+
+            const percent = (current / duration) * 100;
+            document.getElementById('seek-fill').style.width = `${percent}%`;
+        });
+
+        function seekTo(event) {
+            const rect = event.currentTarget.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const width = rect.width;
+            const percent = x / width;
+            mediaElement.currentTime = percent * mediaElement.duration;
+        }
+
+        function seek(seconds) {
+            mediaElement.currentTime += seconds;
+        }
+
+        function setVolume(val) {
+            mediaElement.volume = parseFloat(val);
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "0:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+    </script>
+</body>
+
+</html>
