@@ -78,6 +78,69 @@
                 right: 1.5rem;
             }
         }
+
+        /* Sidebar collapse styles */
+        #sidebar.collapsed {
+            width: 4rem;
+        }
+
+        #sidebar.collapsed .sidebar-text {
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
+        }
+
+        #sidebar.collapsed #playlist-nav {
+            display: none;
+        }
+
+        #sidebar.collapsed #collapse-btn span {
+            transform: rotate(180deg);
+        }
+
+        #collapse-btn span {
+            transition: transform 0.3s ease;
+        }
+
+        /* Adjust padding when collapsed */
+        #sidebar.collapsed>div {
+            padding: 1rem 0.5rem;
+        }
+
+        /* Center buttons when collapsed */
+        #sidebar.collapsed nav a,
+        #sidebar.collapsed nav button {
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        /* Center user section when collapsed */
+        #sidebar.collapsed .flex.items-center.gap-3 {
+            padding-left: 0;
+            padding-right: 0;
+            justify-content: center;
+        }
+
+        /* Center logo when collapsed */
+        #sidebar.collapsed>div>div:first-child {
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Hide collapse button chevron from view when collapsed, only keep functional */
+        #sidebar.collapsed #collapse-btn {
+            margin-left: 0;
+            position: absolute;
+            top: 0.5rem;
+            right: 0.25rem;
+        }
+
+        /* Force center Home button when collapsed */
+        #sidebar.collapsed nav a {
+            justify-content: center !important;
+        }
     </style>
 </head>
 
@@ -93,32 +156,37 @@
 
         <!-- Sidebar Navigation -->
         <aside id="sidebar"
-            class="w-64 flex flex-col bg-background-light dark:bg-background-dark border-r border-slate-200 dark:border-[#232348] h-full shrink-0 fixed md:relative z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+            class="w-64 flex flex-col bg-background-light dark:bg-background-dark border-r border-slate-200 dark:border-[#232348] h-full shrink-0 fixed md:relative z-30 transform -translate-x-full md:translate-x-0 transition-all duration-300">
             <div class="p-6 flex flex-col h-full">
                 <!-- Logo/Brand -->
                 <div class="flex items-center gap-3 mb-10">
                     <div class="bg-primary p-2 rounded-lg flex items-center justify-center">
                         <span class="material-symbols-outlined text-white text-2xl">play_circle</span>
                     </div>
-                    <div class="flex flex-col">
+                    <div class="flex flex-col sidebar-text">
                         <h1 class="text-lg font-bold leading-none">Media Player</h1>
                         <p class="text-[#9292c9] text-xs">Offline Dashboard</p>
                     </div>
                     <button class="md:hidden ml-auto text-slate-500" onclick="toggleSidebar()">
                         <span class="material-symbols-outlined">close</span>
                     </button>
+                    <button id="collapse-btn"
+                        class="hidden md:block ml-auto text-slate-500 hover:text-primary transition-colors"
+                        onclick="toggleSidebarCollapse()" title="Collapse sidebar">
+                        <span class="material-symbols-outlined">chevron_left</span>
+                    </button>
                 </div>
                 <!-- Nav Links -->
                 <!-- Nav Links -->
                 <nav class="flex flex-col gap-2 flex-grow">
-                    <a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary text-white shadow-lg shadow-primary/20 transition-all cursor-pointer"
-                        onclick="showLibrary('all')">
+                    <a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary text-white shadow-lg shadow-primary/20 transition-all cursor-pointer justify-center md:justify-start"
+                        onclick="showLibrary('all')" title="Home">
                         <span class="material-symbols-outlined fill">home</span>
-                        <span class="text-sm font-semibold">Home</span>
+                        <span class="text-sm font-semibold sidebar-text">Home</span>
                     </a>
 
                     <div class="mt-4 pt-4 border-t border-slate-200 dark:border-[#232348]">
-                        <div class="flex items-center justify-between px-4 mb-2">
+                        <div class="flex items-center justify-between px-4 mb-2 sidebar-text">
                             <p class="text-[10px] uppercase tracking-widest text-[#9292c9] font-bold">Playlists</p>
                             <button onclick="openCreatePlaylistModal()" class="text-primary hover:text-blue-400">
                                 <span class="material-symbols-outlined text-sm">add</span>
@@ -131,22 +199,23 @@
 
                     <!-- User Section -->
                     <div class="mt-auto pt-4 border-t border-slate-200 dark:border-[#232348]">
-                        <div class="px-4 mb-2">
+                        <div class="px-4 mb-2 sidebar-text">
                             <p class="text-[10px] uppercase tracking-widest text-[#9292c9] font-bold">User</p>
                         </div>
-                        <div class="flex items-center gap-3 px-4 py-2 mb-2">
+                        <div class="flex items-center gap-3 px-4 py-2 mb-2 justify-center md:justify-start">
                             <div
                                 class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
                                 {{ user.username[0].upper() }}
                             </div>
-                            <div class="flex flex-col overflow-hidden">
+                            <div class="flex flex-col overflow-hidden sidebar-text">
                                 <p class="text-sm font-bold truncate">{{ user.username }}</p>
                             </div>
                         </div>
                         <a href="/logout"
-                            class="flex items-center gap-3 px-4 py-2 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all font-medium text-sm">
+                            class="flex items-center gap-3 px-4 py-2 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all font-medium text-sm justify-center md:justify-start"
+                            title="Logout">
                             <span class="material-symbols-outlined text-[20px]">logout</span>
-                            Logout
+                            <span class="sidebar-text">Logout</span>
                         </a>
                     </div>
                 </nav>
@@ -235,14 +304,14 @@
 
             <!-- Persistent Playback Bar -->
             <footer id="player-control-bar"
-                class="absolute bottom-0 left-0 right-0 h-auto bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-xl border-t border-slate-200 dark:border-[#232348] flex flex-col items-center px-3 md:px-6 py-3 md:py-4 gap-3 md:gap-4 z-20 transition-all">
+                class="absolute bottom-0 left-0 right-0 h-auto bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-xl border-t border-slate-200 dark:border-[#232348] flex flex-col md:flex-row items-center px-3 md:px-4 py-3 md:py-3 gap-3 md:gap-4 z-20 transition-all">
                 <!-- Current Media Info -->
-                <div class="flex items-center gap-3 w-full md:w-1/4 min-w-0 md:min-w-48 justify-start">
+                <div class="flex items-center gap-2 md:gap-3 w-full md:w-auto md:min-w-0 justify-start">
                     <div
-                        class="w-10 h-10 md:w-14 md:h-14 rounded-lg bg-slate-200 dark:bg-[#232348] flex items-center justify-center text-primary shrink-0">
-                        <span class="material-symbols-outlined text-2xl md:text-3xl">music_note</span>
+                        class="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-slate-200 dark:bg-[#232348] flex items-center justify-center text-primary shrink-0">
+                        <span class="material-symbols-outlined text-2xl">music_note</span>
                     </div>
-                    <div class="flex flex-col overflow-hidden text-left">
+                    <div class="flex flex-col overflow-hidden text-left min-w-0">
                         <p id="player-title" class="text-sm font-bold truncate">No media</p>
                         <p id="player-artist" class="text-xs text-slate-500 dark:text-[#9292c9] truncate">Select a file
                         </p>
@@ -276,6 +345,16 @@
                             onclick="toggleRepeat()" title="Repeat">
                             <span class="material-symbols-outlined">repeat</span>
                         </button>
+
+                        <!-- Volume Control (inline) -->
+                        <div
+                            class="hidden md:flex items-center gap-2 ml-4 pl-4 border-l border-slate-200 dark:border-[#232348]">
+                            <span
+                                class="material-symbols-outlined text-slate-500 dark:text-[#9292c9] text-[20px]">volume_up</span>
+                            <input id="volume-slider" type="range" min="0" max="1" step="0.05"
+                                oninput="setVolume(this.value)"
+                                class="w-20 accent-primary h-1 bg-slate-200 dark:bg-[#232348] rounded-full appearance-none cursor-pointer">
+                        </div>
                     </div>
                     <!-- Seek bar -->
                     <div class="flex items-center gap-3 w-full">
@@ -286,17 +365,6 @@
                             <div id="seek-fill" class="h-full bg-primary relative w-0"></div>
                         </div>
                         <span id="total-time" class="text-[10px] text-slate-500 font-medium w-8">0:00</span>
-                    </div>
-                </div>
-
-                <!-- Volume -->
-                <div class="hidden md:flex items-center justify-end gap-4 w-1/4">
-                    <div class="flex items-center gap-2 w-32">
-                        <span
-                            class="material-symbols-outlined text-slate-500 dark:text-[#9292c9] text-[20px]">volume_up</span>
-                        <input id="volume-slider" type="range" min="0" max="1" step="0.05"
-                            oninput="setVolume(this.value)"
-                            class="w-full accent-primary h-1 bg-slate-200 dark:bg-[#232348] rounded-full appearance-none cursor-pointer">
                     </div>
                 </div>
             </footer>
@@ -497,6 +565,23 @@
                 overlay.classList.add('hidden');
             }
         }
+
+        // Sidebar collapse toggle (desktop)
+        function toggleSidebarCollapse() {
+            const sidebar = document.getElementById('sidebar');
+            const isCollapsed = sidebar.classList.toggle('collapsed');
+
+            // Save state to localStorage
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
+        }
+
+        // Restore sidebar state on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (sidebarCollapsed) {
+                document.getElementById('sidebar').classList.add('collapsed');
+            }
+        });
 
         // setDownloadType function removed as we only support audio now.
 
