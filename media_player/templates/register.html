@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Register - Media Player</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2b2bee",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101022",
+                    },
+                    fontFamily: { "display": ["Spline Sans", "sans-serif"] },
+                },
+            },
+        }
+    </script>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white antialiased flex items-center justify-center h-screen px-4">
+    <div
+        class="w-full max-w-md bg-white dark:bg-[#1a1a35] rounded-2xl shadow-xl p-8 border border-slate-200 dark:border-[#232348]">
+        <div class="flex flex-col items-center mb-8">
+            <div class="bg-primary p-3 rounded-xl mb-4 shadow-lg shadow-primary/30">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                </svg>
+            </div>
+            <h1 class="text-2xl font-bold">Create Account</h1>
+            <p class="text-slate-500 dark:text-[#9292c9] text-sm mt-1">Join Media Player and start collecting</p>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        {% for message in messages %}
+        <div
+            class="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-300 px-4 py-3 rounded-xl text-sm mb-4 font-medium text-center">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="/register" class="flex flex-col gap-4">
+            <div>
+                <label
+                    class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-[#9292c9] mb-1">Username</label>
+                <input type="text" name="username" required
+                    class="w-full bg-slate-100 dark:bg-[#232348] border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-[#2a2a5a] text-slate-900 dark:text-white transition-all"
+                    placeholder="Choose a username">
+            </div>
+
+            <div>
+                <label
+                    class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-[#9292c9] mb-1">Password</label>
+                <input type="password" name="password" required
+                    class="w-full bg-slate-100 dark:bg-[#232348] border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-[#2a2a5a] text-slate-900 dark:text-white transition-all"
+                    placeholder="Create a password">
+            </div>
+
+            <button type="submit"
+                class="mt-4 w-full bg-primary hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-primary/20">
+                Register
+            </button>
+        </form>
+
+        <p class="text-center text-sm text-slate-500 dark:text-[#9292c9] mt-6">
+            Already have an account?
+            <a href="/login" class="text-primary font-bold hover:underline">Sign In</a>
+        </p>
+    </div>
+</body>
+
+</html>

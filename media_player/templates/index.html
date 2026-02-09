@@ -109,6 +109,7 @@
                     </button>
                 </div>
                 <!-- Nav Links -->
+                <!-- Nav Links -->
                 <nav class="flex flex-col gap-2 flex-grow">
                     <a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary text-white shadow-lg shadow-primary/20 transition-all cursor-pointer"
                         onclick="showLibrary('all')">
@@ -126,6 +127,27 @@
                         <div id="playlist-nav" class="flex flex-col gap-1 max-h-60 overflow-y-auto">
                             <!-- Playlists injected here -->
                         </div>
+                    </div>
+
+                    <!-- User Section -->
+                    <div class="mt-auto pt-4 border-t border-slate-200 dark:border-[#232348]">
+                        <div class="px-4 mb-2">
+                            <p class="text-[10px] uppercase tracking-widest text-[#9292c9] font-bold">User</p>
+                        </div>
+                        <div class="flex items-center gap-3 px-4 py-2 mb-2">
+                            <div
+                                class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                                {{ user.username[0].upper() }}
+                            </div>
+                            <div class="flex flex-col overflow-hidden">
+                                <p class="text-sm font-bold truncate">{{ user.username }}</p>
+                            </div>
+                        </div>
+                        <a href="/logout"
+                            class="flex items-center gap-3 px-4 py-2 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all font-medium text-sm">
+                            <span class="material-symbols-outlined text-[20px]">logout</span>
+                            Logout
+                        </a>
                     </div>
                 </nav>
             </div>
@@ -156,16 +178,7 @@
                                 placeholder="Paste YouTube URL here..." type="text" />
                         </div>
 
-                        <div class="flex bg-slate-100 dark:bg-[#232348] rounded-xl p-1 shrink-0">
-                            <button onclick="setDownloadType('video')" id="btn-video"
-                                class="flex-1 px-4 py-1.5 rounded-lg text-sm font-medium transition-all bg-white dark:bg-[#2a2a5a] text-primary shadow-sm">
-                                Video
-                            </button>
-                            <button onclick="setDownloadType('audio')" id="btn-audio"
-                                class="flex-1 px-4 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-500 dark:text-[#9292c9] hover:bg-white/50">
-                                Audio
-                            </button>
-                        </div>
+
 
                         <button onclick="startDownload()"
                             class="bg-primary hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
@@ -174,9 +187,13 @@
                         </button>
                     </div>
                     <div id="download-status-container" class="mt-2 hidden">
-                        <div class="flex justify-between text-xs text-slate-500 dark:text-[#9292c9] mb-1">
-                            <span id="status-text">Downloading...</span>
-                            <span id="status-percent">0%</span>
+                        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-[#9292c9] mb-1">
+                            <span id="status-text" class="truncate flex-1">Downloading...</span>
+                            <div class="flex items-center gap-2">
+                                <span id="status-percent">0%</span>
+                                <button onclick="cancelDownload()"
+                                    class="text-red-500 hover:text-red-700 font-bold ml-2">Cancel</button>
+                            </div>
                         </div>
                         <div class="w-full bg-slate-200 dark:bg-[#232348] rounded-full h-1.5">
                             <div id="progress-bar" class="bg-primary h-1.5 rounded-full transition-all duration-300"
@@ -187,17 +204,18 @@
             </header>
 
             <!-- Scrollable Content -->
-            <div class="flex-1 overflow-y-auto pb-32">
+            <div class="flex-1 overflow-y-auto pb-40 md:pb-32">
                 <!-- Library Section -->
                 <section class="py-6 px-4 md:px-8">
                     <div class="flex items-center justify-between mb-4">
                         <h2 id="library-title" class="text-2xl font-bold tracking-tight">Your Library</h2>
                         <div class="flex gap-2 items-center">
-                            <button onclick="fetchFiles()"
+                            <button id="sync-btn" onclick="syncFiles()"
                                 class="p-2 rounded-lg bg-slate-100 dark:bg-[#232348] text-slate-600 dark:text-[#9292c9] hover:text-primary transition-all"
-                                title="Refresh">
-                                <span class="material-symbols-outlined text-[20px]">refresh</span>
+                                title="Sync Files">
+                                <span id="sync-icon" class="material-symbols-outlined text-[20px]">sync</span>
                             </button>
+
                             <button id="delete-playlist-btn" onclick="deleteCurrentPlaylistModal()"
                                 class="p-2 rounded-lg bg-slate-100 dark:bg-[#232348] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all hidden"
                                 title="Delete Playlist">
@@ -206,21 +224,23 @@
                         </div>
                     </div>
 
-                    <div id="files-grid"
-                        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-                        <!-- Files will be injected here -->
+
+                    <div id="library-content">
+                        <!-- Sections will be injected here -->
+                        <div id="files-grid" class="hidden"></div>
+                        <!-- Legacy/Playlists hook if needed, but we will rebuild layout dynamically -->
                     </div>
                 </section>
             </div>
 
             <!-- Persistent Playback Bar -->
-            <footer
-                class="absolute bottom-0 left-0 right-0 h-auto md:h-24 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-xl border-t border-slate-200 dark:border-[#232348] flex flex-col md:flex-row items-center px-4 md:px-6 py-2 md:py-0 gap-4 md:gap-8 z-20 transition-all">
+            <footer id="player-control-bar"
+                class="absolute bottom-0 left-0 right-0 h-auto bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-xl border-t border-slate-200 dark:border-[#232348] flex flex-col items-center px-3 md:px-6 py-3 md:py-4 gap-3 md:gap-4 z-20 transition-all">
                 <!-- Current Media Info -->
-                <div class="flex items-center gap-4 w-full md:w-1/4 min-w-48 justify-start">
+                <div class="flex items-center gap-3 w-full md:w-1/4 min-w-0 md:min-w-48 justify-start">
                     <div
-                        class="w-12 h-12 md:w-14 md:h-14 rounded-lg bg-slate-200 dark:bg-[#232348] flex items-center justify-center text-primary shrink-0">
-                        <span class="material-symbols-outlined text-3xl">music_note</span>
+                        class="w-10 h-10 md:w-14 md:h-14 rounded-lg bg-slate-200 dark:bg-[#232348] flex items-center justify-center text-primary shrink-0">
+                        <span class="material-symbols-outlined text-2xl md:text-3xl">music_note</span>
                     </div>
                     <div class="flex flex-col overflow-hidden text-left">
                         <p id="player-title" class="text-sm font-bold truncate">No media</p>
@@ -230,8 +250,8 @@
                 </div>
 
                 <!-- Player Controls -->
-                <div class="flex flex-col flex-1 w-full max-w-2xl gap-2 items-center">
-                    <div class="flex items-center justify-center gap-6">
+                <div class="flex flex-col flex-1 w-full gap-2 items-center">
+                    <div class="flex items-center justify-center gap-4 md:gap-6">
                         <button id="shuffle-btn"
                             class="text-slate-500 dark:text-[#9292c9] hover:text-primary transition-colors"
                             onclick="toggleShuffle()" title="Shuffle">
@@ -274,7 +294,8 @@
                     <div class="flex items-center gap-2 w-32">
                         <span
                             class="material-symbols-outlined text-slate-500 dark:text-[#9292c9] text-[20px]">volume_up</span>
-                        <input type="range" min="0" max="1" step="0.05" oninput="setVolume(this.value)"
+                        <input id="volume-slider" type="range" min="0" max="1" step="0.05"
+                            oninput="setVolume(this.value)"
                             class="w-full accent-primary h-1 bg-slate-200 dark:bg-[#232348] rounded-full appearance-none cursor-pointer">
                     </div>
                 </div>
@@ -284,9 +305,9 @@
 
     <!-- Create Playlist Modal -->
     <div id="create-playlist-modal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden backdrop-blur-sm">
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden backdrop-blur-sm p-4">
         <div
-            class="bg-background-light dark:bg-background-dark p-6 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-200 dark:border-[#232348] transform transition-all scale-100">
+            class="bg-background-light dark:bg-background-dark p-5 md:p-6 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-200 dark:border-[#232348] transform transition-all scale-100">
             <h3 class="text-xl font-bold mb-1 text-slate-900 dark:text-white">New Playlist</h3>
             <p class="text-sm text-slate-500 dark:text-[#9292c9] mb-4">Enter a name for your new collection.</p>
 
@@ -304,9 +325,9 @@
 
     <!-- Delete Confirmation Modal -->
     <div id="delete-confirm-modal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden backdrop-blur-sm">
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden backdrop-blur-sm p-4">
         <div
-            class="bg-background-light dark:bg-background-dark p-6 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-200 dark:border-[#232348]">
+            class="bg-background-light dark:bg-background-dark p-5 md:p-6 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-200 dark:border-[#232348]">
             <div class="flex flex-col items-center text-center mb-4">
                 <div
                     class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 text-red-500 flex items-center justify-center mb-3">
@@ -340,6 +361,58 @@
         </div>
     </div>
 
+    <!-- Delete File Confirmation Modal -->
+    <div id="delete-file-modal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden backdrop-blur-sm p-4">
+        <div
+            class="bg-background-light dark:bg-background-dark p-5 md:p-6 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-200 dark:border-[#232348] transform transition-all">
+            <div class="flex flex-col items-center text-center mb-4">
+                <div
+                    class="w-14 h-14 rounded-full bg-red-100 dark:bg-red-900/30 text-red-500 flex items-center justify-center mb-3">
+                    <span class="material-symbols-outlined text-3xl">delete_forever</span>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white">Delete File?</h3>
+                <p id="delete-file-text" class="text-sm text-slate-500 dark:text-[#9292c9] mt-2">This will permanently
+                    delete the file from your library and storage.</p>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closeDeleteFileModal()"
+                    class="flex-1 py-2 rounded-xl bg-slate-200 dark:bg-[#232348] text-slate-600 dark:text-[#9292c9] text-sm font-bold hover:bg-slate-300 dark:hover:bg-[#34345a] transition-all">Cancel</button>
+                <button onclick="confirmDeleteFile()"
+                    class="flex-1 py-2 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600 transition-all shadow-lg shadow-red-500/20">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sync Files Confirmation Modal -->
+    <div id="sync-files-modal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden backdrop-blur-sm p-4">
+        <div
+            class="bg-background-light dark:bg-background-dark p-5 md:p-6 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-200 dark:border-[#232348] transform transition-all">
+            <div class="flex flex-col items-center text-center mb-4">
+                <div
+                    class="w-14 h-14 rounded-full bg-blue-100 dark:bg-blue-900/30 text-primary flex items-center justify-center mb-3">
+                    <span class="material-symbols-outlined text-3xl">sync</span>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white">Sync Files?</h3>
+                <p class="text-sm text-slate-500 dark:text-[#9292c9] mt-2">This will scan the directory for new files
+                    and add them to your library.</p>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closeSyncFilesModal()"
+                    class="flex-1 py-2 rounded-xl bg-slate-200 dark:bg-[#232348] text-slate-600 dark:text-[#9292c9] text-sm font-bold hover:bg-slate-300 dark:hover:bg-[#34345a] transition-all">Cancel</button>
+                <button onclick="confirmSyncFiles()"
+                    class="flex-1 py-2 rounded-xl bg-primary text-white text-sm font-bold hover:bg-blue-600 transition-all shadow-lg shadow-primary/20">Sync</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container"
+        class="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
     <script>
         const mediaElement = document.getElementById('media-element');
         const playPauseBtn = document.getElementById('play-pause-btn');
@@ -350,7 +423,7 @@
         const statusPercent = document.getElementById('status-percent');
 
         // State
-        let currentDownloadType = 'video';
+        // Removed currentDownloadType, defaulting to 'audio'
         let allFiles = [];
         let currentPlaylistFiles = []; // Files in current view
         let playlists = {};
@@ -363,8 +436,44 @@
         let currentFileIndex = -1;
 
         // Initial Load
+        // Initial Load
         fetchFiles();
         fetchPlaylists();
+
+        async function syncFiles() {
+            document.getElementById('sync-files-modal').classList.remove('hidden');
+        }
+
+        function closeSyncFilesModal() {
+            document.getElementById('sync-files-modal').classList.add('hidden');
+        }
+
+        async function confirmSyncFiles() {
+            closeSyncFilesModal();
+            const syncBtn = document.getElementById('sync-btn');
+            const syncIcon = document.getElementById('sync-icon');
+
+            // Show loading state
+            syncBtn.disabled = true;
+            syncIcon.classList.add('animate-spin');
+            showLoadingToast('Scanning directory...');
+
+            try {
+                const res = await fetch('/files/sync', { method: 'POST' });
+                const data = await res.json();
+                hideLoadingToast();
+                showToast(data.message, 'success');
+                fetchFiles();
+            } catch (e) {
+                console.error(e);
+                hideLoadingToast();
+                showToast('Error syncing files', 'error');
+            } finally {
+                // Remove loading state
+                syncBtn.disabled = false;
+                syncIcon.classList.remove('animate-spin');
+            }
+        }
 
         // Setup Media End Event for Auto-Play
         mediaElement.addEventListener('ended', () => {
@@ -389,22 +498,7 @@
             }
         }
 
-        function setDownloadType(type) {
-            currentDownloadType = type;
-            const btnVideo = document.getElementById('btn-video');
-            const btnAudio = document.getElementById('btn-audio');
-
-            const activeClass = "bg-white dark:bg-[#2a2a5a] text-primary shadow-sm";
-            const inactiveClass = "text-slate-500 dark:text-[#9292c9] hover:bg-white/50";
-
-            if (type === 'video') {
-                btnVideo.className = `flex-1 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeClass}`;
-                btnAudio.className = `flex-1 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${inactiveClass}`;
-            } else {
-                btnVideo.className = `flex-1 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${inactiveClass}`;
-                btnAudio.className = `flex-1 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeClass}`;
-            }
-        }
+        // setDownloadType function removed as we only support audio now.
 
         // Modal Logic
         function openCreatePlaylistModal() {
@@ -470,7 +564,7 @@
                 const response = await fetch('/download', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url, type: currentDownloadType })
+                    body: JSON.stringify({ url, type: 'audio' }) // Force audio type
                 });
 
                 if (response.ok) {
@@ -480,6 +574,13 @@
                     const data = await response.json();
                     alert(data.error || "Error starting download");
                 }
+            } catch (e) { console.error(e); }
+        }
+
+        async function cancelDownload() {
+            try {
+                await fetch('/cancel', { method: 'POST' });
+                statusText.innerText = "Cancelling...";
             } catch (e) { console.error(e); }
         }
 
@@ -493,6 +594,10 @@
                 progressBar.style.width = data.percentage.replace('%', '') + '%';
 
                 if (data.status === 'completed' || data.status === 'error') {
+                    if (data.filename && data.filename.includes('cancelled')) {
+                        statusText.innerText = "Cancelled";
+                        progressBar.className = "bg-red-500 h-1.5 rounded-full transition-all duration-300";
+                    }
                     clearInterval(interval);
                     fetchFiles();
                     setTimeout(() => downloadStatusContainer.classList.add('hidden'), 5000);
@@ -547,8 +652,8 @@
         }
 
         function renderFiles() {
-            const grid = document.getElementById('files-grid');
-            grid.innerHTML = '';
+            const container = document.getElementById('library-content');
+            container.innerHTML = '';
 
             let displayFiles = allFiles;
             if (currentView !== 'all') {
@@ -560,49 +665,172 @@
             currentPlaylistFiles = displayFiles;
 
             if (displayFiles.length === 0) {
-                grid.innerHTML = `<p class="text-slate-500 col-span-full text-center py-10">No items found.</p>`;
+                container.innerHTML = `<p class="text-slate-500 text-center py-10">No items found.</p>`;
                 return;
             }
 
-            displayFiles.forEach((file, index) => {
-                const el = document.createElement('div');
-                el.className = 'group relative';
+            // Split by type
+            const videos = displayFiles.filter(f => f.type === 'video');
+            const audios = displayFiles.filter(f => f.type === 'audio');
 
-                const icon = file.type === 'video' ? 'movie' : 'music_note';
-                const color = file.type === 'video' ? 'bg-purple-500' : 'bg-blue-500';
+            // Render Function Helper
+            const createGrid = (files, title, icon) => {
+                if (files.length === 0) return '';
 
-                el.innerHTML = `
-                    <div class="relative cursor-pointer mb-3 overflow-hidden rounded-xl aspect-square shadow-xl transition-transform duration-300 group-hover:-translate-y-1 ${color} flex items-center justify-center" onclick="playFileAtIndex(${index})">
-                        <span class="material-symbols-outlined text-white text-6xl">${icon}</span>
-                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <div class="bg-primary w-12 h-12 rounded-full flex items-center justify-center shadow-lg shadow-primary/40">
-                                <span class="material-symbols-outlined text-white text-2xl fill">play_arrow</span>
+                let html = `
+                    <div class="mb-8">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="material-symbols-outlined text-slate-400 dark:text-[#9292c9]">${icon}</span>
+                            <h3 class="text-lg font-bold text-slate-900 dark:text-white">${title}</h3>
+                            <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-200 dark:bg-[#2a2a5a] text-slate-500 dark:text-[#9292c9]">${files.length}</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+                `;
+
+                files.forEach(file => {
+                    // Find global index for player
+                    const index = displayFiles.indexOf(file);
+
+                    const iconType = file.type === 'video' ? 'movie' : 'music_note';
+                    const color = file.type === 'video' ? 'bg-purple-500' : 'bg-blue-500';
+
+                    html += `
+                        <div class="group relative">
+                            <div class="relative cursor-pointer mb-3 overflow-hidden rounded-xl aspect-square shadow-xl transition-transform duration-300 group-hover:-translate-y-1 ${color} flex items-center justify-center" onclick="playFileAtIndex(${index})">
+                                <span class="material-symbols-outlined text-white text-6xl">${iconType}</span>
+                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <div class="bg-primary w-12 h-12 rounded-full flex items-center justify-center shadow-lg shadow-primary/40">
+                                        <span class="material-symbols-outlined text-white text-2xl fill">play_arrow</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-start gap-2">
+                                 <div class="flex-1 min-w-0">
+                                    <h3 class="font-bold text-sm truncate px-1 cursor-pointer" onclick="playFileAtIndex(${index})">${file.filename}</h3>
+                                    <p class="text-xs text-slate-500 dark:text-[#9292c9] px-1 capitalize">${file.type}</p>
+                                 </div>
+                                 <div class="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                     <button onclick="openPlaylistModal('${file.filename}')" class="text-slate-400 hover:text-primary p-1" title="Add to Playlist"><span class="material-symbols-outlined text-[20px]">playlist_add</span></button>
+                                     <button onclick="deleteFile('${file.filename}')" class="text-slate-400 hover:text-red-500 p-1" title="Delete File"><span class="material-symbols-outlined text-[20px]">delete</span></button>
+                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="flex justify-between items-start gap-2">
-                         <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-sm truncate px-1 cursor-pointer" onclick="playFileAtIndex(${index})">${file.filename}</h3>
-                            <p class="text-xs text-slate-500 dark:text-[#9292c9] px-1 capitalize">${file.type}</p>
-                         </div>
-                         <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                             <button onclick="openPlaylistModal('${file.filename}')" class="text-slate-400 hover:text-primary" title="Add to Playlist"><span class="material-symbols-outlined text-[18px]">playlist_add</span></button>
-                             <button onclick="deleteFile('${file.filename}')" class="text-slate-400 hover:text-red-500" title="Delete File"><span class="material-symbols-outlined text-[18px]">delete</span></button>
-                         </div>
-                    </div>
-                `;
-                grid.appendChild(el);
-            });
+                    `;
+                });
+
+                html += `</div></div>`;
+                return html;
+            };
+
+            // Render
+            if (currentView === 'all') {
+                container.innerHTML += createGrid(videos, 'Videos', 'movie');
+                container.innerHTML += createGrid(audios, 'Music', 'queue_music');
+            } else {
+                // For playlists, keep mixed or split? User asked "In Home". 
+                // Let's split them too for consistency, or just mixed. 
+                // Let's split for better UX.
+                container.innerHTML += createGrid(videos, 'Videos', 'movie');
+                container.innerHTML += createGrid(audios, 'Music', 'queue_music');
+            }
         }
 
+        let fileToDelete = null;
+
         async function deleteFile(filename) {
-            if (!confirm(`Delete ${filename}?`)) return;
-            await fetch('/delete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ filename })
-            });
-            fetchFiles();
+            fileToDelete = filename;
+            document.getElementById('delete-file-text').innerText = `Are you sure you want to delete "${filename}"? This action cannot be undone.`;
+            document.getElementById('delete-file-modal').classList.remove('hidden');
+        }
+
+        function closeDeleteFileModal() {
+            document.getElementById('delete-file-modal').classList.add('hidden');
+            fileToDelete = null;
+        }
+
+        async function confirmDeleteFile() {
+            if (!fileToDelete) return;
+            closeDeleteFileModal();
+            showLoadingToast('Deleting file...');
+            try {
+                await fetch('/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: fileToDelete })
+                });
+                showToast('File deleted successfully', 'success');
+                fetchFiles();
+            } catch (e) {
+                console.error(e);
+                showToast('Error deleting file', 'error');
+            }
+            fileToDelete = null;
+        }
+
+        // Toast Notification System
+        let toastIdCounter = 0;
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toastId = `toast-${toastIdCounter++}`;
+
+            const iconMap = {
+                success: 'check_circle',
+                error: 'error',
+                info: 'info',
+                loading: 'hourglass_empty'
+            };
+
+            const colorMap = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                info: 'bg-blue-500',
+                loading: 'bg-primary'
+            };
+
+            const toast = document.createElement('div');
+            toast.id = toastId;
+            toast.className = `pointer-events-auto flex items-center gap-3 ${colorMap[type]} text-white px-4 py-3 rounded-xl shadow-2xl transform translate-x-full transition-transform duration-300 max-w-sm`;
+            toast.innerHTML = `
+                <span class="material-symbols-outlined ${type === 'loading' ? 'animate-spin' : ''}">${iconMap[type]}</span>
+                <span class="text-sm font-medium">${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            // Trigger animation
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full');
+            }, 10);
+
+            // Auto-remove after 3s (unless it's a loading toast)
+            if (type !== 'loading') {
+                setTimeout(() => {
+                    removeToast(toastId);
+                }, 3000);
+            }
+
+            return toastId;
+        }
+
+        function removeToast(toastId) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => toast.remove(), 300);
+            }
+        }
+
+        let currentLoadingToast = null;
+        function showLoadingToast(message) {
+            if (currentLoadingToast) removeToast(currentLoadingToast);
+            currentLoadingToast = showToast(message, 'loading');
+        }
+
+        function hideLoadingToast() {
+            if (currentLoadingToast) {
+                removeToast(currentLoadingToast);
+                currentLoadingToast = null;
+            }
         }
 
         // Add to Playlist Modal
@@ -760,6 +988,34 @@
 
         function setVolume(val) {
             mediaElement.volume = parseFloat(val);
+        }
+
+        // Volume Scroll Logic
+        const playerBar = document.getElementById('player-control-bar');
+        const volumeSlider = document.getElementById('volume-slider');
+
+        playerBar.addEventListener('wheel', (e) => {
+            // Prevent page scroll only if we are modifying volume
+            // But we only want this if hovering the bar.
+            e.preventDefault();
+
+            let current = mediaElement.volume;
+            // Detect direction
+            if (e.deltaY < 0) {
+                // Up
+                current = Math.min(1, current + 0.05);
+            } else {
+                // Down
+                current = Math.max(0, current - 0.05);
+            }
+
+            mediaElement.volume = current;
+            if (volumeSlider) volumeSlider.value = current;
+        }, { passive: false });
+
+        // Initialize volume slider to match media element
+        if (volumeSlider) {
+            volumeSlider.value = mediaElement.volume;
         }
 
         function formatTime(seconds) {

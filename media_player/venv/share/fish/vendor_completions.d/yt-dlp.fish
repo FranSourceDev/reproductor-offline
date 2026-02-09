@@ -199,6 +199,7 @@ complete --command yt-dlp --long-option max-sleep-interval --description 'Maximu
 complete --command yt-dlp --long-option sleep-subtitles --description 'Number of seconds to sleep before each subtitle download'
 complete --command yt-dlp --long-option format --short-option f --description 'Video format code, see "FORMAT SELECTION" for more details'
 complete --command yt-dlp --long-option format-sort --short-option S --description 'Sort the formats by the fields given, see "Sorting Formats" for more details'
+complete --command yt-dlp --long-option format-sort-reset --description 'Disregard previous user specified sort order and reset to the default'
 complete --command yt-dlp --long-option format-sort-force --description 'Force user specified sort order to have precedence over all fields, see "Sorting Formats" for more details (Alias: --S-force)'
 complete --command yt-dlp --long-option no-format-sort-force --description 'Some fields have precedence over the user specified sort order (default)'
 complete --command yt-dlp --long-option video-multistreams --description 'Allow multiple video streams to be merged into a single file'
