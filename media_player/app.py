@@ -8,10 +8,36 @@ import yt_dlp
 from pathlib import Path
 import glob
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'dev-secret-key-change-in-prod' # Change for production
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///media.db'
+
+# Secret key from environment
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-prod')
+
+# Database configuration
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    # Production: PostgreSQL
+    # Fix common postgres:// to postgresql:// (Railway/Heroku compatibility)
+    if DATABASE_URL.startswith('postgres://'):
+        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+    
+    # PostgreSQL connection pool settings
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_size': 10,
+        'pool_recycle': 3600,
+        'pool_pre_ping': True
+    }
+else:
+    # Development: SQLite
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///media.db'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -19,7 +45,7 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
 # Constants
-DOWNLOAD_FOLDER = os.path.join(app.root_path, 'static', 'downloads')
+DOWNLOAD_FOLDER = os.environ.get('DOWNLOAD_FOLDER', os.path.join(app.root_path, 'static', 'downloads'))
 Path(DOWNLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
 
 # --- Models ---
@@ -233,6 +259,17 @@ def register():
 def logout():
     logout_user()
     return redirect(url_for('login'))
+
+@app.route('/health')
+def health():
+    """Health check endpoint for Docker and Coolify"""
+    try:
+        # Test database connection
+        db.session.execute(db.text('SELECT 1'))
+        return jsonify({'status': 'healthy', 'database': 'connected'}), 200
+    except Exception as e:
+        return jsonify({'status': 'unhealthy', 'error': str(e)}), 500
+
 
 @app.route('/download', methods=['POST'])
 @login_required
