@@ -1,0 +1,65 @@
+# Python
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.Python
+**/*.so
+**/*.egg
+**/*.egg-info/
+**/dist/
+**/build/
+**/.eggs/
+
+# Virtual environments
+**/venv/
+**/env/
+**/ENV/
+**/.venv/
+
+# Local database and instance files
+**/instance/
+**/*.db
+**/*.sqlite
+**/*.sqlite3
+
+# Downloaded media files (don't include in image)
+**/static/downloads/*
+!**/static/downloads/.gitkeep
+
+# IDE and editor files
+**/.vscode/
+**/.idea/
+**/*.swp
+**/*.swo
+**/*~
+.DS_Store
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation and development files
+**/README.md
+**/COOLIFY_DEPLOYMENT.md
+**/*.md
+!**/requirements.txt
+
+# Environment files
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Logs
+**/*.log
+**/logs/
+
+# Testing
+**/.pytest_cache/
+**/.coverage
+**/htmlcov/
+**/.tox/
+
+# Other
+**/docker-compose.yml
