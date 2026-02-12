@@ -29,7 +29,7 @@ Complete guide to deploy the YouTube Media Player to your Coolify home server.
 3. Repository configuration:
    - **Git Repository URL**: `https://github.com/yourusername/youtube-downloader`
    - **Branch**: `main`
-   - **Base Directory**: `/media_player`
+   - **Base Directory**: Leave empty (Dockerfile is in repository root)
    - **Build Pack**: Select **Dockerfile**
 4. Click **Continue**
 
