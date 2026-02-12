@@ -106,6 +106,25 @@ curl https://media.yourdomain.com/health
 
 ## Troubleshooting
 
+### Deploy successful but site not loading
+**Symptom**: Deployment logs show success ("New container started"), but site shows "Bad Gateway" or loads forever.
+
+**Solutions**:
+1. **Check Internal Port**:
+   - Go to Coolify → Application → **Configuration**
+   - Verify **Port Exposes** (or Internal Port) is set to `8000`.
+   - Your application listens on port `8000`. If Coolify tries to connect to 3000 or 80, it will fail.
+   
+2. **Check Application Logs**:
+   - Go to **Logs** tab in Coolify (not just Build Logs).
+   - Look for Python errors like `ModuleNotFoundError` or `OperationalError`.
+   - Common error: `sqlalchemy.exc.OperationalError` means database connection failed.
+
+3. **Verify Database Connection**:
+   - Ensure `DATABASE_URL` starts with `postgresql://` and not `postgres://`.
+   - Check if the database username and password are correct.
+   - Using `CTRL+F` in logs for "Error" helps find the issue quickly.
+
 ### Build Fails - FFmpeg Not Found
 **Symptom**: Error during download: `ffmpeg not found`
 
@@ -146,7 +165,7 @@ curl https://media.yourdomain.com/health
 **Solutions**:
 1. Check logs in Coolify for Python errors
 2. Verify all environment variables are set
-3. Test database connection: `curl https://media.yourdomain.com/health`
+3. Test database connection: `curl http://localhost:8000/health` (inside container)
 4. Check resource limits (CPU/memory) in Coolify
 
 ## Backup Strategy
